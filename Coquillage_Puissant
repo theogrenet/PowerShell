@@ -1,0 +1,177 @@
+write-Host "`n";
+
+function DisplayMenu 
+{
+
+Write-Host "`nVersion 1.9 | Dernière modification le : 08/02/2023 " -ForegroundColor Yellow -NoNewline ; write-Host "`n"
+# Affichage version
+Write-Host @" 
++===============================================================+
+|             Outils d'Analyse d'Active Directory               | 
++===============================================================+
+|                                                               |
+|    [1] Listing Système d'Exploitation                         |
+|    [2] Identification Utilisateurs / Ordinateurs              |
+|    [3] Administrer l'Active Directory                         |
+|                                                               |
++===============================================================+
+"@ -ForegroundColor DarkCyan
+# Menu des outils
+Write-Host "`n Option séléctionné " -ForegroundColor Magenta -NoNewline ;$OPTION1 = Read-Host " " ; write-Host ""
+# Demande d'action
+
+#=================================================================================================================================================#
+
+if (1 -eq $option1)
+{
+# Affiche du premier choix
+Write-Host @" 
+
+                                                               
+     [1] Windows Systeme                 
+     [2] Windows Server                   
+
+
+"@ -ForegroundColor DarkCyan
+# Sous menu pour choix 1
+    Write-Host "`n Option séléctionné " -ForegroundColor Magenta -NoNewline ;$OPTION2 = Read-Host " " ; write-Host ""
+    # Demande d'action
+        if (1 -eq $OPTION2)
+        {
+        # Choix 1 bis     
+        $OS = "*"+$OS+"*";$VOS = "*"+$VOS+"*";$NM = "*"+$NM+"*"
+        # Déclaration/Transformation des quotes
+
+        Write-Host "`nEntrer le nom du systeme d'exploitation " -ForegroundColor Yellow -NoNewline ;$OS = Read-Host " " ; write-Host ""
+        # Rapporte le nom du système entrée
+        Write-Host "Entrer la version du systeme d'exploitation le plus haut " -ForegroundColor Yellow -NoNewline ;$VOS = Read-Host " " ; write-Host ""
+        # Rapporte le nom de la version entrée
+        Write-Host "Entrer le nom du domaine à examiner " -ForegroundColor Yellow -NoNewline ;$NM = Read-Host " " ; write-Host "`n";
+        # Rapporte le nom du domaine entrée
+
+        $result = Get-ADComputer -Filter {(OperatingSystem -Like $OS) -and (OperatingSystemVersion -notLike $VOS)} -Property * | ? {$_.DisplayName -like $NM } 
+        # Script qui retourne ses varaibles entrées avec son nom OS, ça version, et domaine pour les afficher par la suite
+        $result | Format-Table Name,OperatingSystem,IPv4Address,OperatingSystemVersion,OperatingSystemServicePack -Wrap 
+        # Affichage des résultat dans un tableau terminal
+
+        Write-Host "Exporter le résultat au format " -ForegroundColor Yellow -NoNewline ; Write-Host "xlxs" -ForegroundColor green -NoNewline ; Write-Host "[X] " -ForegroundColor DarkCyan -NoNewline ; $A = Read-Host " " 
+        # Demande d'affichage du résultat dans un fichier Excel 
+
+            if ($A -eq "X") 
+            {
+                $result | Select-Object Name,OperatingSystem,IPv4Address,OperatingSystemVersion,OperatingSystemServicePack | Export-Excel -ClearSheet -Path 'C:\Users\theo.grenet\Desktop\Test\AD-Version_Machine.xlsx' -AutoSize
+                # Affichage des résultats dans un tableau Excel, créer dans le chemlin de fichier
+            }
+            else 
+            {
+                Write-Host "`nAucune action effectué !" -ForegroundColor Red -NoNewline ; write-Host "`n";
+                # Message avertissement aucune valeur entrée
+            }
+        
+        }
+
+        if (2 -eq $OPTION2)
+        {
+        # Choix 2 bis   
+        $OSS = "*"+$OSS+"*"
+        # Déclaration/Transformation des quotes
+
+        Write-Host "`nEntrer le nom du systeme d'ploitation serveur " -ForegroundColor Yellow -NoNewline ;$OSS = Read-Host " " ; write-Host ""
+        # Séléction de l'OS du server à afficher
+
+        $result = Get-ADComputer -Filter * -properties * | Where {$_.OperatingSystem -like $OSS}
+        # Script scan des nom machine correspoindant à la version OS server séléctionné et rapporté dans la variable
+        $result | Format-Table Name,OperatingSystem -Wrap
+        # Affichage des résultat dans un tableau terminal 
+    
+        Write-Host "Exporter le résultat au format " -ForegroundColor Yellow -NoNewline ; Write-Host "xlxs" -ForegroundColor green -NoNewline ; Write-Host "[X] " -ForegroundColor DarkCyan -NoNewline ; $B = Read-Host " " 
+        # Demande d'affichage du résultat dans un fichier Excel 
+
+            if ($B -eq "X") 
+            {
+                $result | Select-Object Name,OperatingSystem,IPv4Address,OperatingSystemVersion,OperatingSystemServicePack | Export-Excel -ClearSheet -Path 'C:\Users\theo.grenet\Desktop\Test\AD-Version_Machine.xlsx' -AutoSize
+                # Affichage des résultats dans un tableau Excel, créer dans le chemlin de fichier
+            }
+            else 
+            {
+                Write-Host "`nAucune action effectué !" -ForegroundColor Red -NoNewline ; write-Host "`n";
+                # Message avertissement aucune valeur entrée
+            }
+        
+        }
+
+}
+#=================================================================================================================================================#
+
+if (2 -eq $option1)
+{
+# Affiche du second choix
+Write-Host @" 
+
+                                                               
+     [1] Utilisateur Insactif depuis (x) temps                  
+     [2] Ordinateur Insactif depuis (x) temps                   
+
+
+"@ -ForegroundColor DarkCyan
+# Sous menu pour choix 2
+        Write-Host "`n Option séléctionné " -ForegroundColor Magenta -NoNewline ;$OPTION3 = Read-Host " " ; write-Host ""
+        # Demande d'action
+            if (1 -eq $OPTION3)
+            {
+            # Choix 1 bis  
+            Write-Host "`nEntrer le nombre de jour rechercher les comptes utilisateurs insactifs " -ForegroundColor Yellow -NoNewline ;$jour = Read-Host " " ; write-Host ""
+            # Entrée de la valeur nombre de dernier jours
+            $scan_machine = Search-ADaccount -UsersOnly -AccountInactive -Timespan $jour | Where{ $_.DistinguishedName -notmatch "CN=Users" }
+            # Script affichage des dernier user pendant "variable" jours
+            $scan_machine | Format-Table Name,LastLogonDate,LockedOut,ObjectClass,PasswordExpired,PasswordNeverExpires,AccountExpirationDate
+            # Affichage des résultat dans un tableau terminal 
+            }
+
+            if (2 -eq $OPTION3)
+            {
+            # Choix 2 bis  
+            Write-Host "`nEntrer le nombre de jour rechercher les comptes postes insactifs " -ForegroundColor Yellow -NoNewline ;$jourpc = Read-Host " " ; write-Host ""
+            # Entrée de la valeur nombre de dernier jours postes
+            $scan_machine = Search-ADaccount -ComputersOnly -AccountInactive -Timespan $jourpc | Where{ $_.objectClass -eq "computer" }
+            # Script affichage des dernier postes pendant "variable" jours
+            $scan_machine | Format-Table Name,LastLogonDate,LockedOut,ObjectClass,PasswordExpired,PasswordNeverExpires,AccountExpirationDate
+            # Affichage des résultat tableau terminal 
+            }
+}
+#=================================================================================================================================================#
+
+if (3 -eq $option1)
+{
+# Affiche du troième choix
+Write-Host @" 
+
+                                                               
+     [A] Connaître   
+     [B] Créer              
+
+
+"@ -ForegroundColor DarkCyan
+# Sous menu pour choix 3
+        Write-Host "`n Option séléctionné " -ForegroundColor Magenta -NoNewline ;$OPTION4 = Read-Host " " ; write-Host ""
+        # Demande d'action
+
+if (A -eq $OPTION4)
+{
+    
+}
+
+#=================================================================================================================================================#
+
+    if (DisplayMenu -ne 1 -and 2 -and 3)
+    {
+        Write-Host "`n Option séléctionné non recevable " -ForegroundColor Magenta -NoNewline ;Read-Host " " ; write-Host ""
+        return
+    }
+}
+}
+
+DisplayMenu
+
+
+
